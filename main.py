@@ -1,5 +1,6 @@
 import csv
 import os
+from datetime import datetime
 
 def display_leads():
     if not os.path.isfile("leads.csv"):
@@ -16,7 +17,9 @@ def display_leads():
                 f" Email: {lead['email']} |"
                 f" Phone: {lead['phone']} |"
                 f" Service: {lead['service']} |"
-                f" Status: {lead['status']}"
+                f" Status: {lead['status']} |"
+                f" Created At: {lead['created_at']} |"
+                f" Last Contacted At: {lead['last_contacted_at']}"
             )
 
 print("==Lead Automation System==")
@@ -26,6 +29,8 @@ def add_lead():
     phone = input("Enter your phone number: ")
     service = input("Enter the service you are interested in: ")
     lead_id = get_next_lead_id()
+    created_at = get_current_timestamp()
+    last_contacted_at = ""
 
     info = {
         "lead_id": lead_id,
@@ -33,12 +38,14 @@ def add_lead():
         "email": email,
         "phone": phone,
         "service": service,
-        "status": "NEW"
+        "status": "NEW",
+        "created_at": created_at,
+        "last_contacted_at": last_contacted_at
     }
 
     file_exists = os.path.isfile("leads.csv")
     with open("leads.csv", "a", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at"]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         if not file_exists:
@@ -73,7 +80,7 @@ def update_lead_status():
     lead_id = input("Enter the lead ID you want to update: ")
     valid_statuses = ["NEW", "CONTACTED", "FOLLOW-UP", "BOOKED", "COMPLETED", "LOST"]
 
-    new_status = input(f"Enter the new status (valid options: {', '.join(valid_statuses)}): ")
+    new_status = input(f"Enter the new status (valid options: {', '.join(valid_statuses)}): ").upper()
 
     if new_status not in valid_statuses:
         print("Invalid status. Please try again.")
@@ -88,6 +95,9 @@ def update_lead_status():
         for lead in reader:
             if lead["lead_id"] == lead_id:
                 lead["status"] = new_status
+
+                if new_status in ["CONTACTED", "FOLLOW-UP"]:
+                    lead["last_contacted_at"] = get_current_timestamp()
                 lead_found = True
 
             leads.append(lead)
@@ -97,13 +107,16 @@ def update_lead_status():
         return
 
     with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at"]
 
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         writer.writeheader()
         writer.writerows(leads)
     # Implementation for updating lead status would go here
+
+def get_current_timestamp():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 while True:
     print("\n1. Add Lead")

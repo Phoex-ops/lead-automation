@@ -1,2 +1,2 @@
-lead_id,name,email,phone,service,status
-1,Evan Chung,Evanchung011@gmail.com,613-897-9758,Housing,LOST
+lead_id,name,email,phone,service,status,created_at,last_contacted_at
+1,Evan Chung,evanchung011@gmail.com,613-897-9758,Housing,FOLLOW-UP,2026-11-01 22:25:05,2026-11-01 22:25:17
