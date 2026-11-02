@@ -31,6 +31,7 @@ def add_lead():
     lead_id = get_next_lead_id()
     created_at = get_current_timestamp()
     last_contacted_at = ""
+    follow_up_count = 0
 
     info = {
         "lead_id": lead_id,
@@ -40,12 +41,13 @@ def add_lead():
         "service": service,
         "status": "NEW",
         "created_at": created_at,
-        "last_contacted_at": last_contacted_at
+        "last_contacted_at": last_contacted_at,
+        "follow_up_count": follow_up_count
     }
 
     file_exists = os.path.isfile("leads.csv")
     with open("leads.csv", "a", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         if not file_exists:
@@ -107,7 +109,7 @@ def update_lead_status():
         return
 
     with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
 
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -118,11 +120,46 @@ def update_lead_status():
 def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+def check_followups():
+    if not os.path.isfile("leads.csv"):
+        print("No leads found.")
+        return
+
+    leads = []
+    with open("leads.csv", "r", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for lead in reader:
+            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
+                lead["follow_up_count"] = str(
+                    int(lead["follow_up_count"]) + 1
+                )
+
+            leads.append(lead)
+    with open("leads.csv", "w", newline="") as file:
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(leads)
+
+        print("\nFollow-up counts updated successfully!")
+        print("\n=== Follow-up Leads ===")
+
+        for lead in leads:
+            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
+                print(
+                    f"Name: {lead['name']} |"
+                    f"Status: {lead['status']} |"
+                    f"Follow-up Count: {lead['follow_up_count']} |"
+                )
+
 while True:
     print("\n1. Add Lead")
     print("2. Display Leads")
     print("3. Exit")
     print("4. Update Lead Status")
+    print("5. Check Follow-ups")
 
     choice = input("Enter your choice: ")
 
@@ -135,5 +172,7 @@ while True:
         break
     elif choice == "4":
         update_lead_status()
+    elif choice == "5":
+        check_followups()
     else:
         print("Invalid choice. Please try again.")
