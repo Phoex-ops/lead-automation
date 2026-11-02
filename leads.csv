@@ -1,4 +1,2 @@
-name,email,phone,service,status
-Evan,Evanchung011@gmail.com,613-897-9758,Everything,NEW
-Avan Osman,Avanosman@gmail.com,6138975612,Housing,NEW
-Mark,MarkOL@gmail.com,613-822-3663,Food,NEW
+lead_id,name,email,phone,service,status
+1,Evan Chung,Evanchung011@gmail.com,613-897-9758,Housing,LOST
