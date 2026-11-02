@@ -100,6 +100,7 @@ def update_lead_status():
 
                 if new_status in ["CONTACTED", "FOLLOW-UP"]:
                     lead["last_contacted_at"] = get_current_timestamp()
+
                 lead_found = True
 
             leads.append(lead)
@@ -121,6 +122,7 @@ def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def check_followups():
+
     if not os.path.isfile("leads.csv"):
         print("No leads found.")
         return
@@ -130,20 +132,39 @@ def check_followups():
         reader = csv.DictReader(file)
 
         for lead in reader:
-            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
-                lead["follow_up_count"] = str(
-                    int(lead["follow_up_count"]) + 1
-                )
 
+            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
+
+                if lead["last_contacted_at"] != "":
+
+                    if has_time_passed(lead["last_contacted_at"], 30):
+                        lead["follow_up_count"] = str(
+                            int(lead["follow_up_count"]) + 1
+                        )
+
+                        lead["last_contacted_at"] = get_current_timestamp()
+
+                        print(
+                            f"Follow-up sent to {lead['name']}."
+                        )
             leads.append(lead)
     with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
+        fieldnames = [
+            "lead_id",
+            "name", 
+            "email", 
+            "phone", 
+            "service", 
+            "status", 
+            "created_at", 
+            "last_contacted_at", 
+            "follow_up_count"
+        ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         writer.writeheader()
         writer.writerows(leads)
 
-        print("\nFollow-up counts updated successfully!")
         print("\n=== Follow-up Leads ===")
 
         for lead in leads:
@@ -153,7 +174,16 @@ def check_followups():
                     f"Status: {lead['status']} |"
                     f"Follow-up Count: {lead['follow_up_count']} |"
                 )
+def has_time_passed(timestamp, seconds):
+    time_created = datetime.strptime(
+        timestamp, 
+        "%Y-%m-%d %H:%M:%S"
+        )
 
+    current_time = datetime.now()
+    time_difference = current_time - time_created
+
+    return time_difference.total_seconds() >= seconds
 while True:
     print("\n1. Add Lead")
     print("2. Display Leads")
