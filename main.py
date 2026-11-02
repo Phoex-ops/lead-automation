@@ -148,19 +148,27 @@ def check_followups():
                             lead["last_contacted_at"] = get_current_timestamp()
 
                             if follow_up_count == 1:
-                                print(
-                                    f"First follow-up sent to {lead['name']}."
-                                )
+                                message = (f"Hi {lead['name']}, this is a follow-up regarding your"
+                                           f"{lead['service']} request. :et us know if you'd like"
+                                           f" to book an appointment."
+                                        )
+                                print(message)
 
                             elif follow_up_count == 2:
-                                print(
-                                    f"Second follow-up sent to {lead['name']}."
-                                )
+                                    message = (
+                                        f"Hi {lead['name']}, we wanted to follow up again about "
+                                        f"your {lead['service']} request. We're still available "
+                                        f"if you'd like to schedule a time."
+                                    )
+                                    print(message)
 
                             elif follow_up_count == 3:
-                                print(
-                                    f"Third follow-up sent to {lead['name']}. No further follow-ups will be sent."
+                                message = (
+                                    f"Hi {lead['name']}, this is our final follow-up regarding "
+                                    f"your {lead['service']} request. If you still need help, "
+                                    f"feel free to contact us anytime."
                                 )
+                                print(message)
                         else:
                             print(
                                 f"No more follow-ups will be sent to {lead['name']}."
