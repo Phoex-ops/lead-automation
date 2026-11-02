@@ -138,15 +138,34 @@ def check_followups():
                 if lead["last_contacted_at"] != "":
 
                     if has_time_passed(lead["last_contacted_at"], 30):
-                        lead["follow_up_count"] = str(
-                            int(lead["follow_up_count"]) + 1
-                        )
+                        follow_up_count = int(lead["follow_up_count"])
 
-                        lead["last_contacted_at"] = get_current_timestamp()
+                        if follow_up_count < 3:
 
-                        print(
-                            f"Follow-up sent to {lead['name']}."
-                        )
+                            follow_up_count += 1
+                            lead["follow_up_count"] = str(follow_up_count)
+                            lead["status"] = "FOLLOW-UP"
+                            lead["last_contacted_at"] = get_current_timestamp()
+
+                            if follow_up_count == 1:
+                                print(
+                                    f"First follow-up sent to {lead['name']}."
+                                )
+
+                            elif follow_up_count == 2:
+                                print(
+                                    f"Second follow-up sent to {lead['name']}."
+                                )
+
+                            elif follow_up_count == 3:
+                                print(
+                                    f"Third follow-up sent to {lead['name']}. No further follow-ups will be sent."
+                                )
+                        else:
+                            print(
+                                f"No more follow-ups will be sent to {lead['name']}."
+                            )
+
             leads.append(lead)
     with open("leads.csv", "w", newline="") as file:
         fieldnames = [
@@ -184,6 +203,7 @@ def has_time_passed(timestamp, seconds):
     time_difference = current_time - time_created
 
     return time_difference.total_seconds() >= seconds
+
 while True:
     print("\n1. Add Lead")
     print("2. Display Leads")
