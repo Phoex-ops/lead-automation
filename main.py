@@ -217,12 +217,16 @@ def book_appointment():
     while True:
         appointment_date = input("Enter the appointment date and time (YYYY-MM-DD HH:MM): ")
         if validate_appointment_date(appointment_date):
-            break
 
-        print("Invalid date. Please enter a future date"
-              " in the format YYYY-MM-DD HH:MM."
-            )
+            print("Invalid date. Please enter a future date"
+                " in the format YYYY-MM-DD HH:MM."
+                )
+        if not is_appointment_available(appointment_date):
 
+            print(f"Appointment date {appointment_date} is already booked. Please choose another date.")
+            continue
+        
+        break
     leads = []
     lead_found = False
 
@@ -260,6 +264,8 @@ def book_appointment():
         writer.writerows(leads)
 
     print(f"Appointment booked for lead ID {lead_id} on {appointment_date}.")
+
+
 def validate_appointment_date(date_text):
     try:
         appointment = datetime.strptime(date_text, "%Y-%m-%d %H:%M")
@@ -268,7 +274,18 @@ def validate_appointment_date(date_text):
         return True
     except ValueError:
         return False
-    
+def is_appointment_available(appointment_date):
+    if not os.path.isfile("leads.csv"):
+        return True
+
+    with open("leads.csv", "r", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for lead in reader:
+            if lead["appointment_date"] == appointment_date:
+                return False
+
+    return True
 
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
