@@ -283,6 +283,102 @@ def check_followups():
 
     connection.commit()
     connection.close()
+def book_appointment():
+    lead_id = input(
+        "Enter the lead ID you want to book an appointment for: "
+    )
+
+    while True:
+        appointment_date = input(
+            "Enter the appointment date and time "
+            "(YYYY-MM-DD HH:MM): "
+        )
+
+        if not validate_appointment_date(appointment_date):
+            print(
+                "Invalid date. Please enter a future date "
+                "in the format YYYY-MM-DD HH:MM."
+            )
+            continue
+
+        if not is_appointment_available(appointment_date):
+            print(
+                f"{appointment_date} is already booked. "
+                "Please choose another time."
+            )
+            continue
+
+        break
+
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT lead_id
+        FROM leads
+        WHERE lead_id = ?
+        """,
+        (lead_id,)
+    )
+
+    lead = cursor.fetchone()
+
+    if lead is None:
+        print(f"No lead found with ID {lead_id}.")
+        connection.close()
+        return
+
+    cursor.execute(
+        """
+        UPDATE leads
+        SET
+            appointment_date = ?,
+            status = 'BOOKED',
+            reminder_sent = 'NO'
+        WHERE lead_id = ?
+        """,
+        (
+            appointment_date,
+            lead_id
+        )
+    )
+    print("Rows updated:", cursor.rowcount)
+
+    connection.commit()
+    connection.close()
+
+    print(
+        f"Appointment booked for lead ID {lead_id} "
+        f"on {appointment_date}."
+    )
+
+def validate_appointment_date(date_text):
+    try:
+        appointment = datetime.strptime(date_text, "%Y-%m-%d %H:%M")
+        if appointment <= datetime.now():
+            return False
+        return True
+    except ValueError:
+        return False
+def is_appointment_available(appointment_date):
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT lead_id
+        FROM leads
+        WHERE appointment_date = ?
+        """,
+        (appointment_date,)
+    )
+
+    appointment = cursor.fetchone()
+
+    connection.close()
+
+    return appointment is None
 def check_appointment_reminders():
     connection = sqlite3.connect("leads.db")
     cursor = connection.cursor()
@@ -330,82 +426,6 @@ def check_appointment_reminders():
 
     connection.commit()
     connection.close()
-def validate_appointment_date(date_text):
-    try:
-        appointment = datetime.strptime(date_text, "%Y-%m-%d %H:%M")
-        if appointment <= datetime.now():
-            return False
-        return True
-    except ValueError:
-        return False
-def is_appointment_available(appointment_date):
-    connection = sqlite3.connect("leads.db")
-    cursor = connection.cursor()
-
-    cursor.execute(
-        """
-        SELECT lead_id
-        FROM leads
-        WHERE appointment_date = ?
-        """,
-        (appointment_date,)
-    )
-
-    appointment = cursor.fetchone()
-
-    connection.close()
-
-    return appointment is None
-def check_appointment_reminders():
-    if not os.path.isfile("leads.csv"):
-        print("No leads found.")
-        return
-    leads = []
-    
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
-
-        for lead in reader:
-            if (lead["status"] == "BOOKED"
-            and lead["appointment_date"] != ""
-            and lead["reminder_sent"] == "NO"
-            ):
-
-                appointment_datetime = datetime.strptime(lead["appointment_date"], "%Y-%m-%d %H:%M")
-                time_difference = appointment_datetime - datetime.now()
-
-                print(
-                    "Seconds until appointment: ",
-                    time_difference.total_seconds()
-                )
-
-                if 0 < time_difference.total_seconds() <= 120:  # 24 hours in seconds
-                    print(
-                        f"Reminder: {lead['name']} has an appointment "
-                        f"scheduled for {lead['appointment_date']}"
-                    )
-                    lead["reminder_sent"] = "YES"
-            leads.append(lead)
-    with open("leads.csv", "w", newline="") as file:
-        fieldnames = [
-            "lead_id",
-            "name", 
-            "email", 
-            "phone", 
-            "service", 
-            "status", 
-            "created_at", 
-            "last_contacted_at", 
-            "follow_up_count",
-            "appointment_date",
-            "reminder_sent"
-        ]
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        writer.writeheader()
-        writer.writerows(leads)
-
-
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
         timestamp, 
