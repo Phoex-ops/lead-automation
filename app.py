@@ -123,6 +123,61 @@ def update_status(lead_id):
     connection.close()
 
     return redirect("/dashboard")
+@app.route("/book_appointment/<int:lead_id>", methods=["POST"])
+def book_appointment_web(lead_id):
+    appointment_date = request.form["appointment_date"]
+
+    try:
+        appointment_datetime = datetime.strptime(
+            appointment_date,
+            "%Y-%m-%dT%H:%M"
+        )
+    except ValueError:
+        return "Invalid appointment date."
+
+    if appointment_datetime <= datetime.now():
+        return "Appointment must be in the future."
+
+    formatted_date = appointment_datetime.strftime(
+        "%Y-%m-%d %H:%M"
+    )
+
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT lead_id
+        FROM leads
+        WHERE appointment_date = ?
+        """,
+        (formatted_date,)
+    )
+
+    existing_appointment = cursor.fetchone()
+
+    if existing_appointment is not None:
+        connection.close()
+        return "That appointment time is already booked."
+
+    cursor.execute(
+        """
+        UPDATE leads
+        SET appointment_date = ?,
+            status = 'BOOKED',
+            reminder_sent = 'NO'
+        WHERE lead_id = ?
+        """,
+        (
+            formatted_date,
+            lead_id
+        )
+    )
+
+    connection.commit()
+    connection.close()
+
+    return redirect("/dashboard")
 
 if __name__ == "__main__":
     app.run(debug=True)
