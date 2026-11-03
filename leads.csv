@@ -1,3 +1,0 @@
-lead_id,name,email,phone,service,status,created_at,last_contacted_at,follow_up_count,appointment_date,reminder_sent
-1,Evan,"Chung@gmail.com,",141241,Roofing,BOOKED,2026-11-02 22:40:53,,0,2026-11-03 13:38,YES
-2,Evan,Evanchung011@gmail.com,613-897-9758,Roofing,BOOKED,2026-11-03 01:16:48,,0,2020-02-22 12:23,NO
