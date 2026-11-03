@@ -213,8 +213,15 @@ def book_appointment():
         return
 
     lead_id = input("Enter the lead ID you want to book an appointment for: ")
+    
+    while True:
+        appointment_date = input("Enter the appointment date and time (YYYY-MM-DD HH:MM): ")
+        if validate_appointment_date(appointment_date):
+            break
 
-    appointment_date = input("Enter the appointment date (YYYY-MM-DD HH:MM): ")
+        print("Invalid date. Please enter a future date"
+              " in the format YYYY-MM-DD HH:MM."
+            )
 
     leads = []
     lead_found = False
@@ -251,9 +258,18 @@ def book_appointment():
 
         writer.writeheader()
         writer.writerows(leads)
-    print("Appointment booked successfully!")
 
     print(f"Appointment booked for lead ID {lead_id} on {appointment_date}.")
+def validate_appointment_date(date_text):
+    try:
+        appointment = datetime.strptime(date_text, "%Y-%m-%d %H:%M")
+        if appointment <= datetime.now():
+            return False
+        return True
+    except ValueError:
+        return False
+    
+
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
         timestamp, 
