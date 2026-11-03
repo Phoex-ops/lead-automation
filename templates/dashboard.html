@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Lead Dashboard</title>
+</head>
+
+<body>
+
+    <h1>Lead Dashboard</h1>
+
+    <table border="1">
+
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Follow-ups</th>
+            <th>Appointment</th>
+            <th>Reminder Sent</th>
+        </tr>
+
+        {% for lead in leads %}
+
+        <tr>
+            <td>{{ lead[0] }}</td>
+            <td>{{ lead[1] }}</td>
+            <td>{{ lead[2] }}</td>
+            <td>{{ lead[3] }}</td>
+            <td>{{ lead[4] }}</td>
+            <td>
+    <form action="/update_status/{{ lead[0] }}" method="POST">
+
+        <select name="status">
+            <option value="NEW" {% if lead[5] == "NEW" %}selected{% endif %}>
+                NEW
+            </option>
+
+            <option value="CONTACTED" {% if lead[5] == "CONTACTED" %}selected{% endif %}>
+                CONTACTED
+            </option>
+
+            <option value="FOLLOW-UP" {% if lead[5] == "FOLLOW-UP" %}selected{% endif %}>
+                FOLLOW-UP
+            </option>
+
+            <option value="BOOKED" {% if lead[5] == "BOOKED" %}selected{% endif %}>
+                BOOKED
+            </option>
+
+            <option value="COMPLETED" {% if lead[5] == "COMPLETED" %}selected{% endif %}>
+                COMPLETED
+            </option>
+
+            <option value="LOST" {% if lead[5] == "LOST" %}selected{% endif %}>
+                LOST
+            </option>
+        </select>
+
+        <button type="submit">
+            Update
+        </button>
+
+    </form>
+</td>
+            <td>{{ lead[6] }}</td>
+            <td>{{ lead[7] }}</td>
+            <td>{{ lead[8] }}</td>
+            <td>{{ lead[9] }}</td>
+        </tr>
+
+        {% endfor %}
+
+    </table>
+
+</body>
+</html>
