@@ -134,49 +134,71 @@ def get_next_lead_id():
         return max(ids) + 1
 
 def update_lead_status():
-    if not os.path.isfile("leads.csv"):
-        print("No leads found.")
-        return
-
     lead_id = input("Enter the lead ID you want to update: ")
-    valid_statuses = ["NEW", "CONTACTED", "FOLLOW-UP", "BOOKED", "COMPLETED", "LOST"]
 
-    new_status = input(f"Enter the new status (valid options: {', '.join(valid_statuses)}): ").upper()
+    valid_statuses = [
+        "NEW",
+        "CONTACTED",
+        "FOLLOW-UP",
+        "BOOKED",
+        "COMPLETED",
+        "LOST"
+    ]
+
+    new_status = input(
+        f"Enter the new status (valid options: {', '.join(valid_statuses)}): "
+    ).upper()
 
     if new_status not in valid_statuses:
         print("Invalid status. Please try again.")
         return
 
-    leads = []
-    lead_found = False
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
 
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
+    cursor.execute(
+        "SELECT lead_id FROM leads WHERE lead_id = ?",
+        (lead_id,)
+    )
 
-        for lead in reader:
-            if lead["lead_id"] == lead_id:
-                lead["status"] = new_status
+    lead = cursor.fetchone()
 
-                if new_status in ["CONTACTED", "FOLLOW-UP"]:
-                    lead["last_contacted_at"] = get_current_timestamp()
-
-                lead_found = True
-
-            leads.append(lead)
-
-    if not lead_found:
+    if lead is None:
         print(f"No lead found with ID {lead_id}.")
+        connection.close()
         return
 
-    with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date", "reminder_sent"]
+    if new_status in ["CONTACTED", "FOLLOW-UP"]:
+        cursor.execute(
+            """
+            UPDATE leads
+            SET status = ?, last_contacted_at = ?
+            WHERE lead_id = ?
+            """,
+            (
+                new_status,
+                get_current_timestamp(),
+                lead_id
+            )
+        )
 
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+    else:
+        cursor.execute(
+            """
+            UPDATE leads
+            SET status = ?
+            WHERE lead_id = ?
+            """,
+            (
+                new_status,
+                lead_id
+            )
+        )
 
-        writer.writeheader()
-        writer.writerows(leads)
-    # Implementation for updating lead status would go here
+    connection.commit()
+    connection.close()
 
+    print("Lead status updated successfully!")
 def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
