@@ -69,7 +69,28 @@
 </td>
             <td>{{ lead[6] }}</td>
             <td>{{ lead[7] }}</td>
-            <td>{{ lead[8] }}</td>
+            <td>
+    {% if lead[8] %}
+        {{ lead[8] }}
+    {% else %}
+        No appointment
+    {% endif %}
+
+    <form
+        action="/book_appointment/{{ lead[0] }}"
+        method="POST"
+    >
+        <input
+            type="datetime-local"
+            name="appointment_date"
+            required
+        >
+
+        <button type="submit">
+            Book
+        </button>
+    </form>
+</td>
             <td>{{ lead[9] }}</td>
         </tr>
 
