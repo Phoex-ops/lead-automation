@@ -1,5 +1,4 @@
-import csv
-import os
+
 import sqlite3
 from datetime import datetime
 
@@ -116,23 +115,6 @@ def add_lead():
     connection.close()
 
     print("\nLead created successfully!")
-def get_next_lead_id():
-
-    if not os.path.isfile("leads.csv"):
-        return 1
-
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
-
-        ids = []
-        for lead in reader:
-            ids.append(int(lead["lead_id"]))
-
-        if len(ids) == 0:
-            return 1
-
-        return max(ids) + 1
-
 def update_lead_status():
     lead_id = input("Enter the lead ID you want to update: ")
 
