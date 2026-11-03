@@ -19,7 +19,9 @@ def display_leads():
                 f" Service: {lead['service']} |"
                 f" Status: {lead['status']} |"
                 f" Created At: {lead['created_at']} |"
-                f" Last Contacted At: {lead['last_contacted_at']}"
+                f" Last Contacted At: {lead['last_contacted_at']} |"
+                f" Follow-up Count: {lead['follow_up_count']} |"
+                f" Appointment Date: {lead['appointment_date']}"
             )
 
 print("==Lead Automation System==")
@@ -32,6 +34,7 @@ def add_lead():
     created_at = get_current_timestamp()
     last_contacted_at = ""
     follow_up_count = 0
+    appointment_date = ""
 
     info = {
         "lead_id": lead_id,
@@ -42,12 +45,13 @@ def add_lead():
         "status": "NEW",
         "created_at": created_at,
         "last_contacted_at": last_contacted_at,
-        "follow_up_count": follow_up_count
+        "follow_up_count": follow_up_count,
+        "appointment_date": appointment_date
     }
 
     file_exists = os.path.isfile("leads.csv")
     with open("leads.csv", "a", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date"]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
         if not file_exists:
@@ -110,7 +114,7 @@ def update_lead_status():
         return
 
     with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date"]
 
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -185,7 +189,8 @@ def check_followups():
             "status", 
             "created_at", 
             "last_contacted_at", 
-            "follow_up_count"
+            "follow_up_count",
+            "appointment_date"
         ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -201,6 +206,54 @@ def check_followups():
                     f"Status: {lead['status']} |"
                     f"Follow-up Count: {lead['follow_up_count']} |"
                 )
+def book_appointment():
+
+    if not os.path.isfile("leads.csv"):
+        print("No leads found.")
+        return
+
+    lead_id = input("Enter the lead ID you want to book an appointment for: ")
+
+    appointment_date = input("Enter the appointment date (YYYY-MM-DD HH:MM): ")
+
+    leads = []
+    lead_found = False
+
+    with open("leads.csv", "r", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for lead in reader:
+            if lead["lead_id"] == lead_id:
+                lead["appointment_date"] = appointment_date
+                lead["status"] = "BOOKED"
+                lead_found = True
+
+            leads.append(lead)
+
+    if not lead_found:
+        print(f"No lead found with ID {lead_id}.")
+        return
+
+    with open("leads.csv", "w", newline="") as file:
+        fieldnames = [
+            "lead_id",
+            "name", 
+            "email", 
+            "phone", 
+            "service", 
+            "status", 
+            "created_at", 
+            "last_contacted_at", 
+            "follow_up_count",
+            "appointment_date"
+        ]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(leads)
+    print("Appointment booked successfully!")
+
+    print(f"Appointment booked for lead ID {lead_id} on {appointment_date}.")
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
         timestamp, 
@@ -218,6 +271,7 @@ while True:
     print("3. Exit")
     print("4. Update Lead Status")
     print("5. Check Follow-ups")
+    print("6. Book Appointment")
 
     choice = input("Enter your choice: ")
 
@@ -232,5 +286,7 @@ while True:
         update_lead_status()
     elif choice == "5":
         check_followups()
+    elif choice == "6":
+        book_appointment()
     else:
         print("Invalid choice. Please try again.")

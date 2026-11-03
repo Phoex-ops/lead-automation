@@ -1,3 +1,2 @@
-lead_id,name,email,phone,service,status,created_at,last_contacted_at,follow_up_count
-1,John,@gmail.com,67,Yurp,FOLLOW-UP,2026-11-02 01:05:54,2026-11-02 11:55:30,3
-2,Evan,"Chung@,.com",6123,roofing,FOLLOW-UP,2026-11-02 12:29:49,2026-11-02 12:35:09,3
+lead_id,name,email,phone,service,status,created_at,last_contacted_at,follow_up_count,appointment_date
+1,Evan,Chung@gmail.com,67,Roofing,BOOKED,2026-11-02 13:59:11,,0,2000-04-04 10:00
