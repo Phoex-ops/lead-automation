@@ -146,7 +146,8 @@ def update_lead_status():
     ]
 
     new_status = input(
-        f"Enter the new status (valid options: {', '.join(valid_statuses)}): "
+        f"Enter the new status "
+        f"(valid options: {', '.join(valid_statuses)}): "
     ).upper()
 
     if new_status not in valid_statuses:
@@ -203,147 +204,153 @@ def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def check_followups():
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
 
-    if not os.path.isfile("leads.csv"):
-        print("No leads found.")
-        return
+    cursor.execute("""
+        SELECT
+            lead_id,
+            name,
+            service,
+            status,
+            last_contacted_at,
+            follow_up_count
+        FROM leads
+        WHERE status IN ('CONTACTED', 'FOLLOW-UP')
+    """)
 
-    leads = []
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
+    leads = cursor.fetchall()
 
-        for lead in reader:
+    for lead in leads:
+        lead_id = lead[0]
+        name = lead[1]
+        service = lead[2]
+        status = lead[3]
+        last_contacted_at = lead[4]
+        follow_up_count = lead[5]
 
-            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
+        if last_contacted_at is None:
+            continue
 
-                if lead["last_contacted_at"] != "":
+        if has_time_passed(last_contacted_at, 30):
 
-                    if has_time_passed(lead["last_contacted_at"], 30):
-                        follow_up_count = int(lead["follow_up_count"])
+            if follow_up_count < 3:
+                follow_up_count += 1
 
-                        if follow_up_count < 3:
+                if follow_up_count == 1:
+                    message = (
+                        f"Hi {name}, this is a follow-up regarding your "
+                        f"{service} request. Let us know if you'd like "
+                        f"to book an appointment."
+                    )
 
-                            follow_up_count += 1
-                            lead["follow_up_count"] = str(follow_up_count)
-                            lead["status"] = "FOLLOW-UP"
-                            lead["last_contacted_at"] = get_current_timestamp()
+                elif follow_up_count == 2:
+                    message = (
+                        f"Hi {name}, we wanted to follow up again about "
+                        f"your {service} request. We're still available "
+                        f"if you'd like to schedule a time."
+                    )
 
-                            if follow_up_count == 1:
-                                message = (f"Hi {lead['name']}, this is a follow-up regarding your"
-                                           f"{lead['service']} request. :et us know if you'd like"
-                                           f" to book an appointment."
-                                        )
-                                print(message)
+                else:
+                    message = (
+                        f"Hi {name}, this is our final follow-up regarding "
+                        f"your {service} request. If you still need help, "
+                        f"feel free to contact us anytime."
+                    )
 
-                            elif follow_up_count == 2:
-                                    message = (
-                                        f"Hi {lead['name']}, we wanted to follow up again about "
-                                        f"your {lead['service']} request. We're still available "
-                                        f"if you'd like to schedule a time."
-                                    )
-                                    print(message)
+                print(message)
 
-                            elif follow_up_count == 3:
-                                message = (
-                                    f"Hi {lead['name']}, this is our final follow-up regarding "
-                                    f"your {lead['service']} request. If you still need help, "
-                                    f"feel free to contact us anytime."
-                                )
-                                print(message)
-                        else:
-                            print(
-                                f"No more follow-ups will be sent to {lead['name']}."
-                            )
+                cursor.execute(
+                    """
+                    UPDATE leads
+                    SET
+                        follow_up_count = ?,
+                        status = 'FOLLOW-UP',
+                        last_contacted_at = ?
+                    WHERE lead_id = ?
+                    """,
+                    (
+                        follow_up_count,
+                        get_current_timestamp(),
+                        lead_id
+                    )
+                )
 
-            leads.append(lead)
-    with open("leads.csv", "w", newline="") as file:
-        fieldnames = [
-            "lead_id",
-            "name", 
-            "email", 
-            "phone", 
-            "service", 
-            "status", 
-            "created_at", 
-            "last_contacted_at", 
-            "follow_up_count",
-            "appointment_date",
-            "reminder_sent"
-        ]
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
-
-        writer.writeheader()
-        writer.writerows(leads)
-
-        print("\n=== Follow-up Leads ===")
-
-        for lead in leads:
-            if lead["status"] in ["CONTACTED", "FOLLOW-UP"]:
+            else:
                 print(
-                    f"Name: {lead['name']} |"
-                    f"Status: {lead['status']} |"
-                    f"Follow-up Count: {lead['follow_up_count']} |"
+                    f"No more follow-ups will be sent to {name}."
                 )
+
+    connection.commit()
+    connection.close()
 def book_appointment():
+    lead_id = input(
+        "Enter the lead ID you want to book an appointment for: "
+    )
 
-    if not os.path.isfile("leads.csv"):
-        print("No leads found.")
-        return
-
-    lead_id = input("Enter the lead ID you want to book an appointment for: ")
-    
     while True:
-        appointment_date = input("Enter the appointment date and time (YYYY-MM-DD HH:MM): ")
-        if validate_appointment_date(appointment_date):
+        appointment_date = input(
+            "Enter the appointment date and time "
+            "(YYYY-MM-DD HH:MM): "
+        )
 
-            print("Invalid date. Please enter a future date"
-                " in the format YYYY-MM-DD HH:MM."
-                )
+        if not validate_appointment_date(appointment_date):
+            print(
+                "Invalid date. Please enter a future date "
+                "in the format YYYY-MM-DD HH:MM."
+            )
+            continue
+
         if not is_appointment_available(appointment_date):
-
-            print(f"Appointment date {appointment_date} is already booked. Please choose another date.")
+            print(
+                f"{appointment_date} is already booked. "
+                "Please choose another time."
+            )
             continue
 
         break
-    leads = []
-    lead_found = False
 
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
 
-        for lead in reader:
-            if lead["lead_id"] == lead_id:
-                lead["appointment_date"] = appointment_date
-                lead["status"] = "BOOKED"
-                lead_found = True
+    cursor.execute(
+        """
+        SELECT lead_id
+        FROM leads
+        WHERE lead_id = ?
+        """,
+        (lead_id,)
+    )
 
-            leads.append(lead)
+    lead = cursor.fetchone()
 
-    if not lead_found:
+    if lead is None:
         print(f"No lead found with ID {lead_id}.")
+        connection.close()
         return
 
-    with open("leads.csv", "w", newline="") as file:
-        fieldnames = [
-            "lead_id",
-            "name", 
-            "email", 
-            "phone", 
-            "service", 
-            "status", 
-            "created_at", 
-            "last_contacted_at", 
-            "follow_up_count",
-            "appointment_date",
-            "reminder_sent"
-        ]
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+    cursor.execute(
+        """
+        UPDATE leads
+        SET
+            appointment_date = ?,
+            status = 'BOOKED',
+            reminder_sent = 'NO'
+        WHERE lead_id = ?
+        """,
+        (
+            appointment_date,
+            lead_id
+        )
+    )
 
-        writer.writeheader()
-        writer.writerows(leads)
+    connection.commit()
+    connection.close()
 
-    print(f"Appointment booked for lead ID {lead_id} on {appointment_date}.")
-
+    print(
+        f"Appointment booked for lead ID {lead_id} "
+        f"on {appointment_date}."
+    )
 
 def validate_appointment_date(date_text):
     try:
@@ -354,18 +361,23 @@ def validate_appointment_date(date_text):
     except ValueError:
         return False
 def is_appointment_available(appointment_date):
-    if not os.path.isfile("leads.csv"):
-        return True
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
 
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
+    cursor.execute(
+        """
+        SELECT lead_id
+        FROM leads
+        WHERE appointment_date = ?
+        """,
+        (appointment_date,)
+    )
 
-        for lead in reader:
-            if lead["appointment_date"] == appointment_date:
-                return False
+    appointment = cursor.fetchone()
 
-    return True
+    connection.close()
 
+    return appointment is None
 def check_appointment_reminders():
     if not os.path.isfile("leads.csv"):
         print("No leads found.")
