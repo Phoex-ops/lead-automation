@@ -283,75 +283,53 @@ def check_followups():
 
     connection.commit()
     connection.close()
-def book_appointment():
-    lead_id = input(
-        "Enter the lead ID you want to book an appointment for: "
-    )
-
-    while True:
-        appointment_date = input(
-            "Enter the appointment date and time "
-            "(YYYY-MM-DD HH:MM): "
-        )
-
-        if not validate_appointment_date(appointment_date):
-            print(
-                "Invalid date. Please enter a future date "
-                "in the format YYYY-MM-DD HH:MM."
-            )
-            continue
-
-        if not is_appointment_available(appointment_date):
-            print(
-                f"{appointment_date} is already booked. "
-                "Please choose another time."
-            )
-            continue
-
-        break
-
+def check_appointment_reminders():
     connection = sqlite3.connect("leads.db")
     cursor = connection.cursor()
 
-    cursor.execute(
-        """
-        SELECT lead_id
-        FROM leads
-        WHERE lead_id = ?
-        """,
-        (lead_id,)
-    )
-
-    lead = cursor.fetchone()
-
-    if lead is None:
-        print(f"No lead found with ID {lead_id}.")
-        connection.close()
-        return
-
-    cursor.execute(
-        """
-        UPDATE leads
-        SET
-            appointment_date = ?,
-            status = 'BOOKED',
-            reminder_sent = 'NO'
-        WHERE lead_id = ?
-        """,
-        (
+    cursor.execute("""
+        SELECT
+            lead_id,
+            name,
             appointment_date,
-            lead_id
+            reminder_sent
+        FROM leads
+        WHERE status = 'BOOKED'
+        AND appointment_date IS NOT NULL
+        AND reminder_sent = 'NO'
+    """)
+
+    leads = cursor.fetchall()
+
+    for lead in leads:
+        lead_id = lead[0]
+        name = lead[1]
+        appointment_date = lead[2]
+
+        appointment_datetime = datetime.strptime(
+            appointment_date,
+            "%Y-%m-%d %H:%M"
         )
-    )
+
+        time_difference = appointment_datetime - datetime.now()
+
+        if 0 < time_difference.total_seconds() <= 120:
+            print(
+                f"Reminder: {name} has an appointment "
+                f"scheduled for {appointment_date}."
+            )
+
+            cursor.execute(
+                """
+                UPDATE leads
+                SET reminder_sent = 'YES'
+                WHERE lead_id = ?
+                """,
+                (lead_id,)
+            )
 
     connection.commit()
     connection.close()
-
-    print(
-        f"Appointment booked for lead ID {lead_id} "
-        f"on {appointment_date}."
-    )
-
 def validate_appointment_date(date_text):
     try:
         appointment = datetime.strptime(date_text, "%Y-%m-%d %H:%M")
