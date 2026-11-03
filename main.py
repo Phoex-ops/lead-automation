@@ -225,7 +225,7 @@ def book_appointment():
 
             print(f"Appointment date {appointment_date} is already booked. Please choose another date.")
             continue
-        
+
         break
     leads = []
     lead_found = False
@@ -287,6 +287,32 @@ def is_appointment_available(appointment_date):
 
     return True
 
+def check_appointment_reminders():
+    if not os.path.isfile("leads.csv"):
+        print("No leads found.")
+        return
+    
+    with open("leads.csv", "r", newline="") as file:
+        reader = csv.DictReader(file)
+
+        for lead in reader:
+            if lead["status"] == "BOOKED" and lead["appointment_date"] != "":
+
+                appointment_datetime = datetime.strptime(lead["appointment_date"], "%Y-%m-%d %H:%M")
+
+                time_difference = appointment_datetime - datetime.now()
+
+                print(
+                    "Seconds until appointment: ",
+                    time_difference.total_seconds()
+                )
+
+                if 0 < time_difference.total_seconds() <= 86400:  # 24 hours in seconds
+                    print(
+                        f"Reminder: Lead {lead['name']} has an appointment scheduled on "
+                        f"{lead['appointment_date']}."
+                    )
+
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
         timestamp, 
@@ -305,7 +331,8 @@ while True:
     print("4. Update Lead Status")
     print("5. Check Follow-ups")
     print("6. Book Appointment")
-
+    print("7. Check Appointment Reminders")
+    
     choice = input("Enter your choice: ")
 
     if choice == "1":
@@ -321,5 +348,7 @@ while True:
         check_followups()
     elif choice == "6":
         book_appointment()
+    elif choice == "7":
+        check_appointment_reminders()
     else:
         print("Invalid choice. Please try again.")
