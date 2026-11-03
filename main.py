@@ -1,66 +1,121 @@
 import csv
 import os
+import sqlite3
 from datetime import datetime
 
+def initialize_database():
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS leads (
+            lead_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT NOT NULL,
+            phone TEXT NOT NULL,
+            service TEXT NOT NULL,
+            status TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            last_contacted_at TEXT,
+            follow_up_count INTEGER DEFAULT 0,
+            appointment_date TEXT,
+            reminder_sent TEXT DEFAULT 'NO'
+        )
+    """)
+
+    connection.commit()
+    connection.close()
 def display_leads():
-    if not os.path.isfile("leads.csv"):
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            lead_id,
+            name,
+            email,
+            phone,
+            service,
+            status,
+            created_at,
+            last_contacted_at,
+            follow_up_count,
+            appointment_date,
+            reminder_sent
+        FROM leads
+    """)
+
+    leads = cursor.fetchall()
+    connection.close()
+
+    if not leads:
         print("No leads found.")
         return
 
-    with open("leads.csv", "r", newline="") as file:
-        reader = csv.DictReader(file)
+    for lead in leads:
+        print(
+            f"Lead ID: {lead[0]} | "
+            f"Name: {lead[1]} | "
+            f"Email: {lead[2]} | "
+            f"Phone: {lead[3]} | "
+            f"Service: {lead[4]} | "
+            f"Status: {lead[5]} | "
+            f"Created At: {lead[6]} | "
+            f"Last Contacted At: {lead[7]} | "
+            f"Follow-up Count: {lead[8]} | "
+            f"Appointment Date: {lead[9]} | "
+            f"Reminder Sent: {lead[10]}"
+        )
 
-        for lead in reader:
-            print(
-                f"Lead ID: {lead['lead_id']} |"
-                f"Name: {lead['name']} |"
-                f" Email: {lead['email']} |"
-                f" Phone: {lead['phone']} |"
-                f" Service: {lead['service']} |"
-                f" Status: {lead['status']} |"
-                f" Created At: {lead['created_at']} |"
-                f" Last Contacted At: {lead['last_contacted_at']} |"
-                f" Follow-up Count: {lead['follow_up_count']} |"
-                f" Appointment Date: {lead['appointment_date']}"
-            )
 
 print("==Lead Automation System==")
+
+
 def add_lead():
     name = input("Enter your name: ")
     email = input("Enter your email: ")
     phone = input("Enter your phone number: ")
     service = input("Enter the service you are interested in: ")
-    lead_id = get_next_lead_id()
+
     created_at = get_current_timestamp()
-    last_contacted_at = ""
-    follow_up_count = 0
-    appointment_date = ""
 
-    info = {
-        "lead_id": lead_id,
-        "name": name,
-        "email": email,
-        "phone": phone,
-        "service": service,
-        "status": "NEW",
-        "created_at": created_at,
-        "last_contacted_at": last_contacted_at,
-        "follow_up_count": follow_up_count,
-        "appointment_date": appointment_date
-    }
+    connection = sqlite3.connect("leads.db")
+    cursor = connection.cursor()
 
-    file_exists = os.path.isfile("leads.csv")
-    with open("leads.csv", "a", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date"]
-        writer = csv.DictWriter(file, fieldnames=fieldnames)
+    cursor.execute(
+        """
+        INSERT INTO leads (
+            name,
+            email,
+            phone,
+            service,
+            status,
+            created_at,
+            last_contacted_at,
+            follow_up_count,
+            appointment_date,
+            reminder_sent
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            name,
+            email,
+            phone,
+            service,
+            "NEW",
+            created_at,
+            None,
+            0,
+            None,
+            "NO"
+        )
+    )
 
-        if not file_exists:
-            writer.writeheader()
-
-        writer.writerow(info)
+    connection.commit()
+    connection.close()
 
     print("\nLead created successfully!")
-
 def get_next_lead_id():
 
     if not os.path.isfile("leads.csv"):
@@ -114,7 +169,7 @@ def update_lead_status():
         return
 
     with open("leads.csv", "w", newline="") as file:
-        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date"]
+        fieldnames = ["lead_id", "name", "email", "phone", "service", "status", "created_at", "last_contacted_at", "follow_up_count", "appointment_date", "reminder_sent"]
 
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -190,7 +245,8 @@ def check_followups():
             "created_at", 
             "last_contacted_at", 
             "follow_up_count",
-            "appointment_date"
+            "appointment_date",
+            "reminder_sent"
         ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -256,7 +312,8 @@ def book_appointment():
             "created_at", 
             "last_contacted_at", 
             "follow_up_count",
-            "appointment_date"
+            "appointment_date",
+            "reminder_sent"
         ]
         writer = csv.DictWriter(file, fieldnames=fieldnames)
 
@@ -291,15 +348,18 @@ def check_appointment_reminders():
     if not os.path.isfile("leads.csv"):
         print("No leads found.")
         return
+    leads = []
     
     with open("leads.csv", "r", newline="") as file:
         reader = csv.DictReader(file)
 
         for lead in reader:
-            if lead["status"] == "BOOKED" and lead["appointment_date"] != "":
+            if (lead["status"] == "BOOKED"
+            and lead["appointment_date"] != ""
+            and lead["reminder_sent"] == "NO"
+            ):
 
                 appointment_datetime = datetime.strptime(lead["appointment_date"], "%Y-%m-%d %H:%M")
-
                 time_difference = appointment_datetime - datetime.now()
 
                 print(
@@ -307,11 +367,32 @@ def check_appointment_reminders():
                     time_difference.total_seconds()
                 )
 
-                if 0 < time_difference.total_seconds() <= 86400:  # 24 hours in seconds
+                if 0 < time_difference.total_seconds() <= 120:  # 24 hours in seconds
                     print(
-                        f"Reminder: Lead {lead['name']} has an appointment scheduled on "
-                        f"{lead['appointment_date']}."
+                        f"Reminder: {lead['name']} has an appointment "
+                        f"scheduled for {lead['appointment_date']}"
                     )
+                    lead["reminder_sent"] = "YES"
+            leads.append(lead)
+    with open("leads.csv", "w", newline="") as file:
+        fieldnames = [
+            "lead_id",
+            "name", 
+            "email", 
+            "phone", 
+            "service", 
+            "status", 
+            "created_at", 
+            "last_contacted_at", 
+            "follow_up_count",
+            "appointment_date",
+            "reminder_sent"
+        ]
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(leads)
+
 
 def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
@@ -323,6 +404,8 @@ def has_time_passed(timestamp, seconds):
     time_difference = current_time - time_created
 
     return time_difference.total_seconds() >= seconds
+
+initialize_database()
 
 while True:
     print("\n1. Add Lead")
