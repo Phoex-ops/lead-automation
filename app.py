@@ -8,11 +8,13 @@ import sqlite3
 from datetime import datetime
 import smtplib
 import os
+from flask import session
 
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 load_dotenv()
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "development-key")
 
 def send_email(to_email, subject, message):
     sender_email = os.getenv("EMAIL_ADDRESS")
@@ -89,6 +91,8 @@ def home():
 
 @app.route("/dashboard")
 def dashboard():
+    if not session.get("logged_in"):
+        return redirect("/login")
     connection = sqlite3.connect("leads.db")
     cursor = connection.cursor()
 
@@ -220,7 +224,18 @@ def test_email():
 
     return "Test email sent!"
 
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        password = request.form["password"]
 
+        if password == os.getenv("DASHBOARD_PASSWORD"):
+            session["logged_in"] = True
+            return redirect("/dashboard")
+
+        return "Incorrect password."
+
+    return render_template("login.html")
 scheduler = BackgroundScheduler()
 
 scheduler.add_job(

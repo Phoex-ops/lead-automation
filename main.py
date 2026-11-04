@@ -216,7 +216,7 @@ def check_followups():
         if last_contacted_at is None:
             continue
 
-        if has_time_passed(last_contacted_at, 30):
+        if has_time_passed(last_contacted_at, 86400):  # 24 hours in seconds
 
             if follow_up_count < 3:
                 follow_up_count += 1
@@ -406,7 +406,7 @@ def check_appointment_reminders():
 
         time_difference = appointment_datetime - datetime.now()
 
-        if 0 < time_difference.total_seconds() <= 120:
+        if 0 < time_difference.total_seconds() <= 86400:  # 24 hours in seconds
             message = (
                 f"Hi {name}, this is a reminder for your "
                 f"appointment scheduled on {appointment_date}."

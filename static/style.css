@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 40px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+form {
+    margin-bottom: 20px;
+}
+
+input,
+select,
+button {
+    padding: 8px;
+    margin-top: 5px;
+}
+
+button {
+    cursor: pointer;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+th,
+td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #eeeeee;
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+}
