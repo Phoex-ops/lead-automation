@@ -1,3 +1,8 @@
+from apscheduler.schedulers.background import BackgroundScheduler
+from main import(
+    check_appointment_reminders,
+    check_followups
+)
 from flask import Flask, render_template, request, redirect
 import sqlite3
 from datetime import datetime
@@ -215,5 +220,25 @@ def test_email():
 
     return "Test email sent!"
 
+
+scheduler = BackgroundScheduler()
+
+scheduler.add_job(
+    check_followups,
+    "interval",
+    seconds=15
+)
+
+scheduler.add_job(
+    check_appointment_reminders,
+    "interval",
+    seconds=15
+)
+
+scheduler.start()
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(
+        debug=True,
+        use_reloader=False
+    )

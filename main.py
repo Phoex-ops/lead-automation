@@ -1,4 +1,3 @@
-
 import sqlite3
 from datetime import datetime
 from email_utils import send_email
@@ -447,33 +446,41 @@ def has_time_passed(timestamp, seconds):
 
     return time_difference.total_seconds() >= seconds
 
-initialize_database()
+if __name__ == "__main__":
+    initialize_database()
 
-while True:
-    print("\n1. Add Lead")
-    print("2. Display Leads")
-    print("3. Exit")
-    print("4. Update Lead Status")
-    print("5. Check Follow-ups")
-    print("6. Book Appointment")
-    print("7. Check Appointment Reminders")
-    
-    choice = input("Enter your choice: ")
+    while True:
+        print("\n1. Add Lead")
+        print("2. Display Leads")
+        print("3. Exit")
+        print("4. Update Lead Status")
+        print("5. Check Follow-ups")
+        print("6. Book Appointment")
+        print("7. Check Appointment Reminders")
 
-    if choice == "1":
-        add_lead()
-    elif choice == "2":
-        display_leads()
-    elif choice == "3":
-        print("Exiting the program.")
-        break
-    elif choice == "4":
-        update_lead_status()
-    elif choice == "5":
-        check_followups()
-    elif choice == "6":
-        book_appointment()
-    elif choice == "7":
-        check_appointment_reminders()
-    else:
-        print("Invalid choice. Please try again.")
+        choice = input("Enter your choice: ")
+
+        if choice == "1":
+            add_lead()
+
+        elif choice == "2":
+            display_leads()
+
+        elif choice == "3":
+            print("Exiting the program.")
+            break
+
+        elif choice == "4":
+            update_lead_status()
+
+        elif choice == "5":
+            check_followups()
+
+        elif choice == "6":
+            book_appointment()
+
+        elif choice == "7":
+            check_appointment_reminders()
+
+        else:
+            print("Invalid choice. Please try again.")
