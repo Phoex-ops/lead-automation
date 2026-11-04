@@ -205,5 +205,15 @@ def book_appointment_web(lead_id):
 
     return redirect("/dashboard")
 
+@app.route("/test-email")
+def test_email():
+    send_email(
+        os.getenv("EMAIL_ADDRESS"),
+        "Lead Automation Test",
+        "Your Lead Automation email system is working."
+    )
+
+    return "Test email sent!"
+
 if __name__ == "__main__":
     app.run(debug=True)
