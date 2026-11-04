@@ -252,7 +252,7 @@ def check_followups():
                         message
                     )
                     print(f"Follow-up email sent to {name} ({email}).")
-                    
+
                 except Exception as error:
                     print(f"Email could not be sent: {error}")
                     continue
@@ -383,6 +383,7 @@ def check_appointment_reminders():
         SELECT
             lead_id,
             name,
+            email,
             appointment_date,
             reminder_sent
         FROM leads
@@ -396,7 +397,8 @@ def check_appointment_reminders():
     for lead in leads:
         lead_id = lead[0]
         name = lead[1]
-        appointment_date = lead[2]
+        email = lead[2]
+        appointment_date = lead[3]
 
         appointment_datetime = datetime.strptime(
             appointment_date,
@@ -406,11 +408,24 @@ def check_appointment_reminders():
         time_difference = appointment_datetime - datetime.now()
 
         if 0 < time_difference.total_seconds() <= 120:
-            print(
-                f"Reminder: {name} has an appointment "
-                f"scheduled for {appointment_date}."
+            message = (
+                f"Hi {name}, this is a reminder for your "
+                f"appointment scheduled on {appointment_date}."
             )
 
+            print(message)
+
+            try:
+                send_email(
+                    email,
+                    "Appointment Reminder",
+                    message
+                )
+                print(f"Reminder email sent to {email}.")
+
+            except Exception as error:
+                print(f"Email could not be sent: {error}")
+                continue
             cursor.execute(
                 """
                 UPDATE leads
@@ -419,7 +434,6 @@ def check_appointment_reminders():
                 """,
                 (lead_id,)
             )
-
     connection.commit()
     connection.close()
 def has_time_passed(timestamp, seconds):
