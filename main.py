@@ -1,6 +1,7 @@
 
 import sqlite3
 from datetime import datetime
+from email_utils import send_email
 
 def initialize_database():
     connection = sqlite3.connect("leads.db")
@@ -190,26 +191,28 @@ def check_followups():
     cursor = connection.cursor()
 
     cursor.execute("""
-        SELECT
-            lead_id,
-            name,
-            service,
-            status,
-            last_contacted_at,
-            follow_up_count
-        FROM leads
-        WHERE status IN ('CONTACTED', 'FOLLOW-UP')
-    """)
+    SELECT
+        lead_id,
+        name,
+        email,
+        service,
+        status,
+        last_contacted_at,
+        follow_up_count
+    FROM leads
+    WHERE status IN ('CONTACTED', 'FOLLOW-UP')
+""")
 
     leads = cursor.fetchall()
 
     for lead in leads:
         lead_id = lead[0]
         name = lead[1]
-        service = lead[2]
-        status = lead[3]
-        last_contacted_at = lead[4]
-        follow_up_count = lead[5]
+        email = lead[2]
+        service = lead[3]
+        status = lead[4]
+        last_contacted_at = lead[5]
+        follow_up_count = lead[6]
 
         if last_contacted_at is None:
             continue
@@ -242,6 +245,17 @@ def check_followups():
 
                 print(message)
 
+                try:
+                    send_email(
+                        email,
+                        f"Following up on your {service} request",
+                        message
+                    )
+                    print(f"Follow-up email sent to {name} ({email}).")
+                    
+                except Exception as error:
+                    print(f"Email could not be sent: {error}")
+                    continue
                 cursor.execute(
                     """
                     UPDATE leads
