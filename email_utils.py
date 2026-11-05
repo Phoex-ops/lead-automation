@@ -13,6 +13,7 @@ def send_email(to_email, subject, message):
         json={
             "from": "Lead Automation <onboarding@resend.dev>",
             "to": [to_email],
+            "reply_to": "evanchung011@gmail.com",
             "subject": subject,
             "text": message
         }
