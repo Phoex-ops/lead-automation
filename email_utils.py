@@ -1,30 +1,21 @@
 import os
-import smtplib
-
-from email.mime.text import MIMEText
-from dotenv import load_dotenv
-
-load_dotenv()
-
+import requests
 
 def send_email(to_email, subject, message):
-    sender_email = os.getenv("EMAIL_ADDRESS")
-    sender_password = os.getenv("EMAIL_PASSWORD")
+    api_key = os.getenv("RESEND_API_KEY")
 
-    email = MIMEText(message)
+    response = requests.post(
+        "https://api.resend.com/emails",
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        },
+        json={
+            "from": "Lead Automation <onboarding@resend.dev>",
+            "to": [to_email],
+            "subject": subject,
+            "text": message
+        }
+    )
 
-    email["Subject"] = subject
-    email["From"] = sender_email
-    email["To"] = to_email
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(
-            sender_email,
-            sender_password
-        )
-
-        server.sendmail(
-            sender_email,
-            to_email,
-            email.as_string()
-        )
+    response.raise_for_status()
