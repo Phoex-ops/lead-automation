@@ -281,6 +281,21 @@ def delete_lead(lead_id):
     connection.commit()
     connection.close()
 
+@app.route("/reset_lead_ids", methods=["POST"])
+def reset_lead_ids():
+    if not session.get("logged_in"):
+        return redirect("/login")
+
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "DELETE FROM sqlite_sequence WHERE name = 'leads'"
+    )
+
+    connection.commit()
+    connection.close()
+
     return redirect("/dashboard")
 
 if __name__ == "__main__":
