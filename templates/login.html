@@ -1,11 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
     <title>Dashboard Login</title>
 </head>
 
 <body>
-
+<div class="container">
     <h1>Business Dashboard Login</h1>
 
     <form method="POST">
@@ -24,6 +28,6 @@
             Login
         </button>
     </form>
-
+</div>
 </body>
 </html>

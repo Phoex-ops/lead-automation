@@ -2,11 +2,15 @@
 
 <html>
 <head>
+    <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='style.css') }}"
+>
     <title>Lead Dashboard</title>
 </head>
 
 <body>
-
+<div class="container">
     <h1>Lead Dashboard</h1>
 
     <table border="1">
@@ -97,6 +101,6 @@
         {% endfor %}
 
     </table>
-
+</div>
 </body>
 </html>
