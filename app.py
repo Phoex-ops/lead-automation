@@ -262,6 +262,27 @@ scheduler.add_job(
 
 scheduler.start()
 
+@app.route("/delete_lead/<int:lead_id>", methods=["POST"])
+def delete_lead(lead_id):
+    if not session.get("logged_in"):
+        return redirect("/login")
+
+    connection = sqlite3.connect(DB_PATH)
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        DELETE FROM leads
+        WHERE lead_id = ?
+        """,
+        (lead_id,)
+    )
+
+    connection.commit()
+    connection.close()
+
+    return redirect("/dashboard")
+
 if __name__ == "__main__":
     app.run(
         debug=True,

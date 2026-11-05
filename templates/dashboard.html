@@ -26,6 +26,7 @@
             <th>Follow-ups</th>
             <th>Appointment</th>
             <th>Reminder Sent</th>
+            <th>Actions</th>
         </tr>
 
         {% for lead in leads %}
@@ -96,6 +97,20 @@
     </form>
 </td>
             <td>{{ lead[9] }}</td>
+
+<td>
+    <form
+        action="/delete_lead/{{ lead[0] }}"
+        method="POST"
+        onsubmit="return confirm('Are you sure you want to delete this lead?');"
+    >
+        <button type="submit">
+            Delete
+        </button>
+    </form>
+</td>
+
+</tr>
         </tr>
 
         {% endfor %}
