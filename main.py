@@ -3,6 +3,10 @@ from datetime import datetime
 from email_utils import send_email
 import os
 
+from zoneinfo import ZoneInfo
+
+LOCAL_TZ = ZoneInfo("America/Toronto")
+
 DB_PATH = os.getenv("DATABASE_PATH", "leads.db")
 
 def initialize_database():
@@ -186,7 +190,7 @@ def update_lead_status():
 
     print("Lead status updated successfully!")
 def get_current_timestamp():
-    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    return datetime.now(LOCAL_TZ).strftime("%Y-%m-%d %H:%M:%S")
 
 def check_followups():
     connection = sqlite3.connect(DB_PATH)
@@ -405,9 +409,9 @@ def check_appointment_reminders():
         appointment_datetime = datetime.strptime(
             appointment_date,
             "%Y-%m-%d %H:%M"
-        )
+        ).replace(tzinfo=LOCAL_TZ)
 
-        time_difference = appointment_datetime - datetime.now()
+        time_difference = appointment_datetime - datetime.now(LOCAL_TZ)
 
         if 0 < time_difference.total_seconds() <= 120:  # 24 hours in seconds
             message = (
@@ -442,9 +446,9 @@ def has_time_passed(timestamp, seconds):
     time_created = datetime.strptime(
         timestamp, 
         "%Y-%m-%d %H:%M:%S"
-        )
+        ).replace(tzinfo=LOCAL_TZ)
 
-    current_time = datetime.now()
+    current_time = datetime.now(LOCAL_TZ)
     time_difference = current_time - time_created
 
     return time_difference.total_seconds() >= seconds

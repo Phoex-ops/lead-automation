@@ -15,6 +15,10 @@ from email.mime.text import MIMEText
 from dotenv import load_dotenv
 load_dotenv()
 
+from zoneinfo import ZoneInfo
+
+LOCAL_TZ = ZoneInfo("America/Toronto")
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "development-key")
@@ -169,13 +173,13 @@ def book_appointment_web(lead_id):
 
     try:
         appointment_datetime = datetime.strptime(
-            appointment_date,
-            "%Y-%m-%dT%H:%M"
-        )
+        appointment_date,
+        "%Y-%m-%dT%H:%M"
+    ).replace(tzinfo=LOCAL_TZ)
     except ValueError:
         return "Invalid appointment date."
 
-    if appointment_datetime <= datetime.now():
+    if appointment_datetime <= datetime.now(LOCAL_TZ):
         return "Appointment must be in the future."
 
     formatted_date = appointment_datetime.strftime(
