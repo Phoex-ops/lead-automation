@@ -99,22 +99,6 @@
             <td>{{ lead[9] }}</td>
 
 <td>
-    <form
-        action="/delete_lead/{{ lead[0] }}"
-        method="POST"
-        onsubmit="return confirm('Are you sure you want to delete this lead?');"
-    >
-        <button type="submit">
-            Delete
-        </button>
-    </form>
-</td>
-
-<form action="/reset_lead_ids" method="POST">
-    <button type="submit">
-        Reset Lead IDs
-    </button>
-</form>
 
 </tr>
         </tr>
