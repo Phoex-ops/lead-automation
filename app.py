@@ -1,5 +1,6 @@
 from apscheduler.schedulers.background import BackgroundScheduler
 from main import(
+    initialize_database,
     check_appointment_reminders,
     check_followups
 )
@@ -13,8 +14,12 @@ from flask import session
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 load_dotenv()
+
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "development-key")
+
+DB_PATH = os.getenv("DATABASE_PATH", "leads.db")
 
 def send_email(to_email, subject, message):
     sender_email = os.getenv("EMAIL_ADDRESS")
@@ -49,7 +54,7 @@ def home():
 
         created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-        connection = sqlite3.connect("leads.db")
+        connection = sqlite3.connect(DB_PATH)
         cursor = connection.cursor()
 
         cursor.execute(
@@ -93,7 +98,7 @@ def home():
 def dashboard():
     if not session.get("logged_in"):
         return redirect("/login")
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -125,7 +130,7 @@ def dashboard():
 def update_status(lead_id):
     new_status = request.form["status"]
 
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     if new_status in ["CONTACTED", "FOLLOW-UP"]:
@@ -177,7 +182,7 @@ def book_appointment_web(lead_id):
         "%Y-%m-%d %H:%M"
     )
 
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -236,6 +241,7 @@ def login():
         return "Incorrect password."
 
     return render_template("login.html")
+initialize_database()
 scheduler = BackgroundScheduler()
 
 scheduler.add_job(

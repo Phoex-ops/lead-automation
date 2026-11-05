@@ -1,9 +1,12 @@
 import sqlite3
 from datetime import datetime
 from email_utils import send_email
+import os
+
+DB_PATH = os.getenv("DATABASE_PATH", "leads.db")
 
 def initialize_database():
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -25,7 +28,7 @@ def initialize_database():
     connection.commit()
     connection.close()
 def display_leads():
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -78,7 +81,7 @@ def add_lead():
 
     created_at = get_current_timestamp()
 
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -136,7 +139,7 @@ def update_lead_status():
         print("Invalid status. Please try again.")
         return
 
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -186,7 +189,7 @@ def get_current_timestamp():
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def check_followups():
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute("""
@@ -305,7 +308,7 @@ def book_appointment():
 
         break
 
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -357,7 +360,7 @@ def validate_appointment_date(date_text):
     except ValueError:
         return False
 def is_appointment_available(appointment_date):
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute(
@@ -375,7 +378,7 @@ def is_appointment_available(appointment_date):
 
     return appointment is None
 def check_appointment_reminders():
-    connection = sqlite3.connect("leads.db")
+    connection = sqlite3.connect(DB_PATH)
     cursor = connection.cursor()
 
     cursor.execute("""
